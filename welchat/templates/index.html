@@ -1,0 +1,304 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Chatbot</title>
+    <!-- Add Bootstrap CDN link -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 600px;
+            margin-top: 50px;
+        }
+
+        #chat-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #chat-history {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-bubble,
+        .bot-bubble {
+            max-width: 70%;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 8px;
+            word-wrap: break-word;
+        }
+
+        .user-bubble {
+            background-color: #007bff;
+            color: #fff;
+            align-self: flex-end;
+        }
+
+        .bot-bubble {
+            background-color: #28a745;
+            color: #fff;
+            align-self: flex-start;
+        }
+
+        #user-input-form {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        #chat-btn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .section-btn {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div id="chat-container">
+            <div id="chat-history">
+                <div class="bot-bubble">Welcome! May I know your name, please?</div>
+            </div>
+            <form id="user-input-form">
+                <input type="text" id="user-input" autocomplete="off" placeholder="Type your message...">
+                <button type="button" id="chat-btn" onclick="sendName()">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Bootstrap and jQuery CDN links -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    function sendName() {
+        const userName = document.getElementById('user-input').value;
+        appendMessage('User', userName);
+        document.getElementById('user-input').value = '';
+
+        // Send user name to the server
+        fetch('/get_response', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `user_message=${encodeURIComponent(userName)}`,
+        })
+        .then(response => response.json())
+        .then(data => {
+            const botResponse = data.bot_response;
+            appendMessage('Bot', botResponse);
+            // Once the name is received, present the section buttons
+            presentSectionButtons();
+        });
+    }
+
+function presentSectionButtons() {
+    const chatHistory = document.getElementById('chat-history');
+    const sectionChoiceParagraph = document.createElement('p');
+    sectionChoiceParagraph.id = 'section-choice';
+    sectionChoiceParagraph.textContent = 'Choose a Section:';
+    chatHistory.appendChild(sectionChoiceParagraph);
+
+    // Create buttons for each section
+    const sectionButtonsDiv = document.createElement('div');
+    sectionButtonsDiv.id = 'section-buttons';
+    chatHistory.appendChild(sectionButtonsDiv);
+
+    const sections = ['know about company', 'know more about fund', 'know more about safety to quality protocol', 'Chat with us', 'XXXX'];
+    sections.forEach(section => {
+        const button = document.createElement('button');
+        button.className = 'section-btn';
+        button.textContent = section;
+        button.onclick = () => selectSection(section);
+        sectionButtonsDiv.appendChild(button);
+    });
+}
+
+function selectSection(chosenSection) {
+    // Handle the section selection
+    const userMessage = `Selected section: ${chosenSection}`;
+    sendMessage(userMessage);
+
+    // Send the selected section to the server
+    sendMessageToServer(chosenSection);
+}
+
+// Add a function to send a message to the server (replace this with your actual implementation)
+function sendMessageToServer(selectedSection) {
+    // Replace this with your logic to send the message to the server
+    // For example, you can use fetch or XMLHttpRequest to send data to your Flask server
+    fetch('/get_response', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            user_message: selectedSection,
+            user_id: 'your_user_id',  // Replace with the actual user ID
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Handle the server response here
+        console.log('Server response:', data.bot_response);
+        // You can display the server response in the chat or take other actions based on it
+        sendMessage(data.bot_response);
+    })
+    .catch(error => {
+        console.error('Error sending message to server:', error);
+    });
+}
+
+function selectSection(chosenSection) {
+    // Handle the section selection
+    const userMessage = `Selected section: ${chosenSection}`;
+    sendMessage(userMessage);
+
+    // Add logic to send the selected section to the server
+    // You can send an AJAX request or use a WebSocket to notify the server about the section selection
+    // For simplicity, I'll assume there's a function sendMessageToServer to send the selected section
+    sendMessageToServer(chosenSection);
+}
+
+// Add a function to send a message to the server (replace this with your actual implementation)
+function sendMessageToServer(message) {
+    // Replace this with your logic to send the message to the server
+    // For example, you can use fetch or XMLHttpRequest to send data to your Flask server
+    console.log(`Sending message to server: ${message}`);
+}
+
+    function sendMessage() {
+        const userMessage = document.getElementById('user-input').value;
+        appendMessage('User', userMessage);
+        document.getElementById('user-input').value = '';
+
+        // Send user message to the server
+        fetch('/get_response', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `user_message=${encodeURIComponent(userMessage)}`,
+        })
+        .then(response => response.json())
+        .then(data => {
+            const botResponse = data.bot_response;
+            appendMessage('Bot', botResponse);
+        });
+    }
+
+    function selectSection(section) {
+        appendMessage('User', `Selected section: ${section}`);
+
+        // Send selected section to the server
+        fetch('/get_response', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `user_message=${encodeURIComponent(section)}`,
+        })
+        .then(response => response.json())
+        .then(data => {
+            const botResponse = data.bot_response;
+            appendMessage('Bot', botResponse);
+        });
+    }
+
+    function appendMessage(sender, message) {
+        const chatHistory = document.getElementById('chat-history');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = sender.toLowerCase();
+        messageDiv.textContent = `${sender}: ${message}`;
+        chatHistory.appendChild(messageDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll to the bottom
+    }
+      // JavaScript to handle user clicks on FAQs
+        document.addEventListener('DOMContentLoaded', function () {
+            const faqList = document.getElementById('faq-list');
+            const responseContainer = document.getElementById('response-container');
+
+            // Function to handle user clicks on FAQs
+            function handleFaqClick(faq) {
+                // Make a request to the server to get the response for the clicked FAQ
+                fetch('/get_response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_message: faq,
+                        user_id: 'some_user_id',  // You may use a proper user ID here
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Display the bot response in the response container
+                    responseContainer.innerHTML = `<p>${data.bot_response}</p>`;
+                })
+                .catch(error => {
+                    console.error('Error fetching response:', error);
+                });
+            }
+
+            // Function to add FAQs to the list
+            function addFaqToList(faq) {
+                const faqItem = document.createElement('li');
+                faqItem.textContent = faq;
+                faqItem.addEventListener('click', () => handleFaqClick(faq));
+                faqList.appendChild(faqItem);
+            }
+
+            // Dummy data for testing (replace with actual data from the server)
+            const dummyData = {
+                section: 'Some Section',
+                faqs: ['Question 1?', 'Question 2?', 'Question 3?'],
+            };
+
+            // Add FAQs to the list
+            dummyData.faqs.forEach(addFaqToList);
+        });
+</script>
+
+</body>
+
+</html>

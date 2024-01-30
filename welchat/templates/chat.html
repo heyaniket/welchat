@@ -1,0 +1,62 @@
+
+
+<!-- templates/chat.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welchat - {{ section }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>{{ section }}</h2>
+        <div class="chat-container">
+            <div class="chat-messages">
+                {% for message in messages %}
+                    <div class="{{ message['class'] }}">{{ message['content'] }}</div>
+                {% endfor %}
+            </div>
+            <div class="sample-questions">
+                <h4>Choose from the sample questions or Type your question below:</h4>
+                <ul>
+                    {% for question, _ in sample_questions %}
+                        <li>
+                            <a href="#" class="sample-question" data-question="{{ question }}">{{ question }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="previous-responses">
+                <h3>Previous Responses:</h3>
+                <ul>
+                    {% for response in previous_responses %}
+                        <li class="{{ response['class'] }}">{{ response['content'] }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <!-- Your HTML code for the form -->
+            <form class="chat-form" action="/chat/{{ section }}" method="post">
+                <input type="text" id="user_input" name="user_input" placeholder="Enter question or type 'Bye' to exit..." required>
+                <button type="submit">Send</button>
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const sampleQuestions = document.querySelectorAll('.sample-question');
+
+            sampleQuestions.forEach(questionLink => {
+                questionLink.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const selectedQuestion = this.dataset.question;
+                    document.getElementById('user_input').value = selectedQuestion;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

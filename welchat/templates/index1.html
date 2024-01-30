@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap">
+    <title>Welchat</title>
+     <link rel="icon" href=file"E:\\aniket_welspun\\chatbot\\welspun-logo-black.png" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="index-box">
+            <h2>Welcome to the Welspun chat assistant!</h2>
+            <p>{{ welcome_message }}</p>
+            <form action="/start" method="POST">
+                <label for="username">Enter your name, please </label>
+                <p>                                               </p>
+                <input type="text" id="username" name="username" required>
+                <button type="submit">Start Chat</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

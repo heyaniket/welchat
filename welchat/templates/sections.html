@@ -1,0 +1,29 @@
+<!-- templates/sections.html -->
+<!-- templates/sections.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welchat - Sections</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome, {{ username }}!</h2>
+        <p style="margin-bottom: 20px;"><b>Please select a section to start:</b></p>
+        
+        <div class="section-cards">
+            {% for section in sections %}
+                <div class="section-card">
+                    <a href="/chat/{{ section }}">
+                        <h3>{{ section }}</h3>
+                        <p>{{ section_info.get(section, 'Description not available.') }}</p>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WelChat</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #e1e4e7;
+        }
+
+        .chat-container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #3037c6;
+            color: #fff;
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .chat-box {
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .input-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex: 2; /* Adjusted from flex: 1 to flex: 2 */
+            margin-right: 10px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .message {
+            margin: 10px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .user-message {
+            background-color: #4b7998;
+            color: #fff;
+            text-align: right;
+        }
+
+        .bot-message {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+
+        /* Media Query for responsiveness */
+        @media (max-width: 600px) {
+            .chat-container {
+                width: 100%;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="header">
+            <h1>WelChat</h1>
+        </div>
+        <div class="chat-box" id="chat-container">
+            <!-- Chat messages will be displayed here -->
+        </div>
+        <div class="input-box" id="name-entry">
+            <input type="text" id="user-name" placeholder="Your name...">
+            <button onclick="setUserName()">Start Chat</button>
+        </div>
+        <div class="input-box" id="chat-box" style="display:none;">
+            <input type="text" id="user-input" placeholder="Ask a question...">
+            <button onclick="sendUserInput()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        function setUserName() {
+            var userName = document.getElementById("user-name").value;
+            if (userName.trim() !== "") {
+                document.getElementById("name-entry").style.display = "none";
+                document.getElementById("chat-box").style.display = "block";
+                appendMessage("Bot", "Hello " + userName + "! I'm WelChat. How can I assist you today?", "bot-message");
+            }
+        }
+    
+        function sendUserInput() {
+            var userInput = document.getElementById("user-input").value;
+            if (userInput.trim() !== "") {
+                appendMessage("You", userInput, "user-message");
+                document.getElementById("user-input").value = "";
+    
+                // Check if the user wants to end the chat
+                if (userInput.toLowerCase() === 'bye' || userInput.toLowerCase() === 'thank you') {
+                    endChat();
+                } else {
+                    // Send the user input to the server
+                    fetch("/get_response", {
+                        method: "POST",
+                        body: new URLSearchParams({ "user_input": userInput }),
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        appendMessage("Bot", data, "bot-message");
+    
+                        // Check if the chat should end
+                        if (data.toLowerCase().includes("goodbye")) {
+                            endChat();
+                        } else {
+                            // Prompt for additional questions
+                            appendMessage("Bot", "Feel free to ask more questions, or type 'bye' or 'thank you' to end the chat.", "bot-message");
+                        }
+                    });
+                }
+            }
+        }
+    
+        function endChat() {
+            appendMessage("Bot", "Thank you for chatting with WelChat. If you have more questions, feel free to reach out. Goodbye!", "bot-message");
+            document.getElementById("name-entry").style.display = "block";
+            document.getElementById("chat-box").style.display = "none";
+        }
+    
+        function appendMessage(sender, message, messageClass) {
+            var chatContainer = document.getElementById("chat-container");
+            var newMessage = document.createElement("p");
+            newMessage.textContent = sender + ": " + message;
+            newMessage.classList.add("message", messageClass);
+            chatContainer.appendChild(newMessage);
+        }
+    
+        function get_closest_question(user_input, questions) {
+            var tfidf_vectorizer = new TfidfVectorizer();
+            var tfidf_matrix = tfidf_vectorizer.fit_transform([user_input].concat(Object.keys(questions)));
+            var similarities = cosineSimilarity(tfidf_matrix.getArray()[0], tfidf_matrix.slice([1, 0], [tfidf_matrix.shape[0] - 1, tfidf_matrix.shape[1]]).getArray().flat());
+    
+            var max_similarity = Math.max.apply(null, similarities);
+            var closest_question_index = similarities.indexOf(max_similarity);
+            var closest_question = Object.keys(questions)[closest_question_index];
+    
+            // Set a threshold value (adjust as needed)
+            var threshold = 0.1;
+    
+            if (max_similarity > threshold) {
+                return closest_question;
+            }
+    
+            return null;
+        }
+    
+        // Function to calculate cosine similarity
+        function cosineSimilarity(arr1, arr2) {
+            var dotProduct = 0;
+            var normA = 0;
+            var normB = 0;
+    
+            for (var i = 0; i < arr1.length; i++) {
+                dotProduct += arr1[i] * arr2[i];
+                normA += arr1[i] * arr1[i];
+                normB += arr2[i] * arr2[i];
+            }
+    
+            if (normA === 0 || normB === 0) {
+                return 0;
+            }
+    
+            return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+        }
+    </script>
+    
+</body>
+</html>
